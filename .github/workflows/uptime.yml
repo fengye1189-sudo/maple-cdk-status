@@ -1,0 +1,42 @@
+name: Maple CDK External Uptime
+
+on:
+  schedule:
+    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
+  workflow_dispatch:
+    inputs:
+      test_notification:
+        description: Send one clearly labelled Telegram test notice
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: maple-cdk-uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Probe independently and notify only on state changes
+        env:
+          CDK_TELEGRAM_BOT_TOKEN: ${{ secrets.CDK_TELEGRAM_BOT_TOKEN }}
+          CDK_TELEGRAM_CHAT_ID: ${{ secrets.CDK_TELEGRAM_CHAT_ID }}
+          TEST_NOTIFICATION: ${{ inputs.test_notification || 'false' }}
+        run: python3 monitor.py
+      - name: Save only public availability state
+        if: always()
+        run: |
+          test -f status.json
+          git config user.name 'Maple status monitor'
+          git config user.email 'status@users.noreply.github.com'
+          git add status.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update public availability state [skip ci]'
+            git push
+          fi
