@@ -1,7 +1,7 @@
 {
   "site": "https://cdk.maple1189ai.com",
-  "status": "down",
-  "checked_at": "2026-10-05T00:11:47.128191+00:00",
-  "last_transition_at": "2026-10-04T21:46:20.652677+00:00",
-  "notified_status": "down"
+  "status": "up",
+  "checked_at": "2026-10-05T05:31:57.564216+00:00",
+  "last_transition_at": "2026-10-05T05:31:57.564216+00:00",
+  "notified_status": "up"
 }
