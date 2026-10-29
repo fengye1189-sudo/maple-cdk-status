@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 from urllib.request import Request, urlopen
 
-HEALTH_URL = 'https://cdk.maple1189ai.com/health'
+HEALTH_URL = 'https://maple1189ai.com/redeem'
 STATE = Path('status.json')
 
 
@@ -16,8 +16,8 @@ def probe():
         with urlopen(Request(HEALTH_URL, headers={'User-Agent': 'Maple-CDK-External-Monitor/1.0'}), timeout=10) as response:
             if response.status != 200:
                 return False
-            payload = json.loads(response.read(4096))
-            return payload.get('status') == 'ok'
+            body = response.read(8192).decode('utf-8', errors='ignore')
+            return 'MaplePass' in body or 'redeem' in body.lower()
     except Exception:
         return False
 
@@ -39,7 +39,7 @@ def notify(message):
 def next_state(previous, available, now):
     status = 'up' if available else 'down'
     transition = previous.get('last_transition_at') if previous.get('status') == status else now
-    return {'site': 'https://cdk.maple1189ai.com', 'status': status, 'checked_at': now,
+    return {'site': 'https://maple1189ai.com/redeem', 'status': status, 'checked_at': now,
             'last_transition_at': transition, 'notified_status': previous.get('notified_status', 'up')}
 
 
@@ -58,8 +58,8 @@ def run(test_notification=False):
     current = next_state(previous, available, now)
     notification_ok = True
     if current['status'] != current['notified_status']:
-        message = ('🍁 兑换站站外监控：连续 3 次无法确认网站正常，可能存在宕机或网络故障。请检查 https://cdk.maple1189ai.com 。没有重试任何付款。'
-                   if not available else '🍁 兑换站站外监控：网站已恢复正常响应。请到后台查看订单与运行状态。')
+        message = ('🍁 兑换站站外监控：连续 3 次无法确认网站正常，可能存在宕机或网络故障。请检查 https://maple1189ai.com/redeem 。'
+                   if not available else '🍁 兑换站站外监控：网站已恢复正常响应。兑换站访问正常：https://maple1189ai.com/redeem 。')
         notification_ok = notify(message)
         if notification_ok:
             current['notified_status'] = current['status']
